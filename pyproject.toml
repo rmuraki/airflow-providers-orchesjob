@@ -1,0 +1,32 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2026 Ryosuke Muraki
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "airflow-providers-orchesjob"
+version = "0.1.4"
+description = "Apache Airflow provider for orchesjob – lightweight idempotent job runner"
+readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [{ name = "Ryosuke Muraki" }]
+requires-python = ">=3.12"
+keywords = ["airflow", "provider", "orchesjob"]
+classifiers = [
+  "Framework :: Apache Airflow",
+  "Framework :: Apache Airflow :: Provider",
+]
+dependencies = [
+  "apache-airflow>=2.6",
+  "apache-airflow-providers-ssh>=3.0",
+]
+
+[project.optional-dependencies]
+test = ["pytest>=8"]
+
+[project.entry-points."apache_airflow_provider"]
+orchesjob = "airflow_providers_orchesjob:get_provider_info"
+
+[tool.pytest.ini_options]
