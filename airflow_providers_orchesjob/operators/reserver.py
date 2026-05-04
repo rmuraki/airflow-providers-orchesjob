@@ -17,24 +17,26 @@ class OrchesJobReserveOperator(BaseOperator):
         "expires_at",
         "metadata_json",
         "command",
+        "env",
     )
 
     def __init__(
-        self,
-        *,
-        ssh_conn_id: str,
-        run_key: str,
-        command: list[str],
-        not_before: str | None = None,
-        expires_at: str | None = None,
-        metadata: dict[str, Any] | None = None,
-        metadata_json: str | None = None,
-        orchesjob_reserver_bin: str = "orchesjob-reserver",
-        orchesjob_start_options: list[str] | None = None,
-        remote_db: str | None = None,
-        remote_orchesjob_bin: str | None = None,
-        command_timeout: int = 30,
-        **kwargs: Any,
+            self,
+            *,
+            ssh_conn_id: str,
+            run_key: str,
+            command: list[str],
+            not_before: str | None = None,
+            expires_at: str | None = None,
+            metadata: dict[str, Any] | None = None,
+            metadata_json: str | None = None,
+            orchesjob_reserver_bin: str = "orchesjob-reserver",
+            orchesjob_start_options: list[str] | None = None,
+            remote_db: str | None = None,
+            remote_orchesjob_bin: str | None = None,
+            command_timeout: int = 30,
+            env: dict[str, str] | None = None,
+            **kwargs: Any,
     ) -> None:
         super().__init__(**kwargs)
         self.ssh_conn_id = ssh_conn_id
@@ -49,6 +51,7 @@ class OrchesJobReserveOperator(BaseOperator):
         self.remote_db = remote_db
         self.remote_orchesjob_bin = remote_orchesjob_bin
         self.command_timeout = command_timeout
+        self.env = env or {}
 
     def execute(self, context: dict[str, Any]) -> dict[str, Any]:
         cmd = OrchesJobReserveCommand(
@@ -62,6 +65,7 @@ class OrchesJobReserveOperator(BaseOperator):
             orchesjob_start_options=tuple(self.orchesjob_start_options),
             db=self.remote_db,
             orchesjob_bin=self.remote_orchesjob_bin,
+            env=self.env,
         ).shell_command()
 
         self.log.info("Reserve command: %s", cmd)

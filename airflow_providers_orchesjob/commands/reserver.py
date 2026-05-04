@@ -18,6 +18,7 @@ class OrchesJobReserveCommand:
     orchesjob_start_options: tuple[str, ...] = ()
     db: str | None = None
     orchesjob_bin: str | None = None
+    env: dict[str, str] | None = None
 
     def argv(self) -> list[str]:
         args: list[str] = [
@@ -57,4 +58,12 @@ class OrchesJobReserveCommand:
         return args
 
     def shell_command(self) -> str:
-        return " ".join(shlex.quote(str(x)) for x in self.argv())
+        env_prefix = ""
+        if self.env:
+            env_prefix = " ".join(
+                f"{shlex.quote(str(k))}={shlex.quote(str(v))}"
+                for k, v in self.env.items()
+            )
+            env_prefix += " "
+
+        return env_prefix + " ".join(shlex.quote(str(x)) for x in self.argv())
