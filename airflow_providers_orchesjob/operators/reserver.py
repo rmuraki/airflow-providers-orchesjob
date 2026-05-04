@@ -70,18 +70,25 @@ class OrchesJobReserveOperator(BaseOperator):
 
         self.log.info("Reserve command: %s", cmd)
 
-        hook = SSHHook(
-            ssh_conn_id=self.ssh_conn_id,
-            cmd_timeout=self.command_timeout,
-        )
-        client = hook.get_conn()
+        client = None
 
-        _, stdout, stderr = client.exec_command(cmd, timeout=self.command_timeout)
-        exit_status = stdout.channel.recv_exit_status()
+        try:
+            hook = SSHHook(
+                ssh_conn_id=self.ssh_conn_id,
+                cmd_timeout=self.command_timeout,
+            )
+            client = hook.get_conn()
+            
+            _, stdout, stderr = client.exec_command(cmd, timeout=self.command_timeout)
+            exit_status = stdout.channel.recv_exit_status()
+            
+            out = stdout.read().decode("utf-8", errors="replace")
+            err = stderr.read().decode("utf-8", errors="replace")
 
-        out = stdout.read().decode("utf-8", errors="replace")
-        err = stderr.read().decode("utf-8", errors="replace")
-
+        finally:
+            if client:
+                client.close()
+            
         if err.strip():
             self.log.warning("orchesjob-reserver stderr: %s", err.strip())
 
