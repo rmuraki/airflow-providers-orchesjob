@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "airflow-providers-orchesjob"
-version = "0.1.6"
+version = "0.1.7"
 description = "Apache Airflow provider for orchesjob – lightweight idempotent job runner"
 readme = "README.md"
 license = "MIT"

@@ -7,7 +7,7 @@ from airflow.exceptions import AirflowException
 from airflow.models import BaseOperator
 from airflow.providers.ssh.hooks.ssh import SSHHook
 
-from orchesjob.commands.reserver import OrchesJobReserveCommand
+from airflow_providers_orchesjob.commands.reserver import OrchesJobReserveCommand
 
 
 class OrchesJobReserveOperator(BaseOperator):
