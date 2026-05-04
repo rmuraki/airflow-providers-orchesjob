@@ -18,6 +18,7 @@ class OrchesJobReserveOperator(BaseOperator):
         "metadata_json",
         "command",
         "env",
+        "orchesjob_home",
     )
 
     def __init__(
@@ -36,6 +37,7 @@ class OrchesJobReserveOperator(BaseOperator):
             remote_orchesjob_bin: str | None = None,
             command_timeout: int = 30,
             env: dict[str, str] | None = None,
+            orchesjob_home: str | None = None,
             **kwargs: Any,
     ) -> None:
         super().__init__(**kwargs)
@@ -52,8 +54,13 @@ class OrchesJobReserveOperator(BaseOperator):
         self.remote_orchesjob_bin = remote_orchesjob_bin
         self.command_timeout = command_timeout
         self.env = env or {}
+        self.orchesjob_home = orchesjob_home
 
     def execute(self, context: dict[str, Any]) -> dict[str, Any]:
+        env = dict(self.env)
+        if self.orchesjob_home:
+            env.setdefault("ORCHESJOB_HOME", self.orchesjob_home)
+
         cmd = OrchesJobReserveCommand(
             orchesjob_reserver_bin=self.orchesjob_reserver_bin,
             run_key=self.run_key,
@@ -65,7 +72,7 @@ class OrchesJobReserveOperator(BaseOperator):
             orchesjob_start_options=tuple(self.orchesjob_start_options),
             db=self.remote_db,
             orchesjob_bin=self.remote_orchesjob_bin,
-            env=self.env,
+            env=env,
         ).shell_command()
 
         self.log.info("Reserve command: %s", cmd)

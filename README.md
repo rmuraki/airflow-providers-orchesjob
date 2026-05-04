@@ -50,6 +50,7 @@ and the scheduler re-queues the task after `poke_interval` seconds, avoiding thi
 - Apache Airflow ≥ 2.6
 - `apache-airflow-providers-ssh` ≥ 3.0
 - `orchesjob` installed on the remote host
+- `orchesjob-reserver` installed on the remote host (only when using `OrchesJobReserveOperator`)
 
 ## Installation
 
@@ -97,6 +98,31 @@ def my_dag():
     start >> wait
 ```
 
+### Reserving a job with OrchesJobReserveOperator
+
+Use `OrchesJobReserveOperator` to register a job reservation via `orchesjob-reserver` on the remote host.
+A reservation schedules a job for future execution with optional timing constraints (`not_before`, `expires_at`).
+
+The operator returns the reservation payload as an XCom value.
+
+```python
+from airflow.decorators import dag
+from airflow_providers_orchesjob.operators.reserver import OrchesJobReserveOperator
+
+@dag(dag_id="my_dag", ...)
+def my_dag():
+    reserve = OrchesJobReserveOperator(
+        task_id="reserve_job",
+        ssh_conn_id="my_ssh",
+        run_key="daily-import-{{ ds }}",
+        command=["/jobs/import.sh", "--date", "{{ ds }}"],
+        orchesjob_home="/path/to/orchesjob",
+        not_before="{{ ds }}T02:00:00+09:00",   # earliest start time (optional)
+        expires_at="{{ ds }}T06:00:00+09:00",   # reservation expiry (optional)
+        metadata={"env": "prod"},               # arbitrary metadata (optional)
+    )
+```
+
 ### Idempotency
 
 `run_key` defaults to `{dag_id}__{task_id}__{run_id}`.
@@ -116,6 +142,25 @@ Set `strict=True` to prevent any re-execution with the same `run_key`,
 even after the previous job has finished.
 
 ## Parameters
+
+### OrchesJobReserveOperator
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `ssh_conn_id` | `str` | **required** | Airflow SSH Connection ID |
+| `run_key` | `str` | **required** | orchesjob-reserver idempotency key |
+| `command` | `list[str]` | **required** | Command to run on the remote host |
+| `not_before` | `str \| None` | `None` | Earliest time the job may start (ISO 8601) |
+| `expires_at` | `str \| None` | `None` | Time after which the reservation expires (ISO 8601) |
+| `metadata` | `dict \| None` | `None` | Arbitrary metadata attached to the reservation |
+| `metadata_json` | `str \| None` | `None` | Pre-serialised JSON metadata (takes precedence over `metadata`) |
+| `orchesjob_home` | `str \| None` | `None` | Override `ORCHESJOB_HOME` on the remote host |
+| `orchesjob_reserver_bin` | `str` | `"orchesjob-reserver"` | Path to the `orchesjob-reserver` binary on the remote host |
+| `orchesjob_start_options` | `list[str] \| None` | `None` | Extra options forwarded to `orchesjob start` |
+| `remote_db` | `str \| None` | `None` | Override the orchesjob-reserver database path on the remote host |
+| `remote_orchesjob_bin` | `str \| None` | `None` | Override the `orchesjob` binary path on the remote host |
+| `command_timeout` | `int` | `30` | SSH command timeout in seconds |
+| `env` | `dict[str, str] \| None` | `None` | Extra environment variables set before the command |
 
 ### OrchesJobOperator
 
